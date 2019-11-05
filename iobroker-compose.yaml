@@ -1,0 +1,105 @@
+version: '3.3'
+
+services:
+
+  mysql:
+    image: 'mariadb:10.4.8-bionic'
+    container_name: mariadb
+    hostname: db-virt-host
+    ports:
+      - '3306:3306'
+    networks:
+      - iob-network
+    restart: always
+    volumes:
+#      - ${DB_VOLUME_FOLDER}/etc/docker-entrypoint.sh:/docker-entrypoint.sh
+      - ${DB_STARTUP_FOLDER}:/docker-entrypoint-initdb.d
+      - ${DB_VOLUME_FOLDER}/data:/var/lib/mysql
+      - ${DB_VOLUME_FOLDER}/etc:/etc/mysql/conf.d
+      - ${DB_VOLUME_FOLDER}/logs:/var/lib/mysql/logs
+    environment:
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_INITDB_SKIP_TZINFO=1
+      - TZ=UTC
+      - MYSQL_DATABASE=sensors
+      - MYSQL_USER=sensor
+      - MYSQL_IOB_DATABASE=iobroker
+      - MYSQL_IOB_USER=iobroker
+    env_file:
+      - secrets.env
+#    command:
+#      mysqld --innodb-flush-method=littlesync --innodb-use-native-aio=OFF
+
+  mosquitto:
+    container_name: mosquitto
+    hostname: mqtt-virt-host
+    image: eclipse-mosquitto:latest
+    restart: always
+    volumes:
+      - ${MOSQUITTO_VOLUME_FOLDER}/config:/mosquitto/config
+      - ${MOSQUITTO_VOLUME_FOLDER}/data:/mosquitto/data
+      - ${MOSQUITTO_VOLUME_FOLDER}/log:/mosquitto/log
+    ports:
+      - 1883:1883
+      - 9001:9001
+#    user:
+#      '1883:0'
+    environment:
+      - MQTT_BROKER_URL=mqtt://mosquitto
+    networks:
+      - iob-network
+#    command:
+#      mosquitto_passwd -b /mosquitto/config/passwd mqttuser mqttpassword
+#      /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf
+
+  iobroker:
+    image: 'buanet/iobroker'
+    container_name: iobroker
+    hostname: iob-virt-host
+    ports:
+      - '8081:8081'
+    volumes:
+      - ${IOBROKER_VOLUME_FOLDER}:/opt/iobroker
+      - ${IOBROKER_STARTUP_FOLDER}/iobroker_startup.sh:/opt/scripts/iobroker_startup.sh
+      - ${IOBROKER_STARTUP_FOLDER}/setup_zigbee.sh:/opt/scripts/setup_zigbee.sh
+    networks:
+      - iob-network
+    restart: always
+    environment:
+      - TZ=Europe/Moscow
+      - LANGUAGE=en_US.UTF-8
+#    entrypoint: /bin/bash -c /opt/iobroker/iobroker-startup.sh
+
+# переехало в entrypoint скрипт
+#    command:
+#      echo '#test'>/opt/scripts/iobroker_startup.sh
+#      sed -i 's/,ru:"Драйвера",/,ru:"Драйверы",/' /opt/iobroker/node_modules/iobroker.admin/www/js/app.js
+#      sed -i 's/\\"Драйвера\\"/\\"Драйверы\\"/' /opt/iobroker/node_modules/iobroker.admin/www/js/app.js.map
+
+
+  # docker run -d --name=deconz --net=host --restart=always -v /etc/localtime:/etc/localtime:ro -v /opt/deconz:/root/.local/share/dresden-elektronik/deCONZ -e DECONZ_VNC_MODE=0 -e DECONZ_WEB_PORT=8090 --device=/dev/ttyUSB-DECONZ -e DECONZ_DEVICE=/dev/ttyUSB-DECONZ marthoc/deconz
+  deconz:
+    image: 'marthoc/deconz'
+    container_name: deconz
+    hostname: deconz-virt-host
+    ports:
+      - '8090:8090'
+    devices:
+      - /dev/ttyUSB-DECONZ
+    networks:
+      - iob-network
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+#      - /opt/deconz:/root/.local/share/dresden-elektronik/deCONZ
+      - ${DECONZ_FOLDER}:/root/.local/share/dresden-elektronik/deCONZ
+    environment:
+      - DECONZ_VNC_MODE=0
+      - DECONZ_WEB_PORT=8090
+      - DECONZ_DEVICE=/dev/ttyUSB-DECONZ
+
+networks:
+  iob-network:
+    external:
+      name: iobroker-network
+

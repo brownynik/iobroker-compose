@@ -1,0 +1,16 @@
+version: '3.3'
+# docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v /mnt/hdd/portainer:/data portainer/portainer                  
+
+services:
+
+  portainer:
+    image: 'portainer/portainer'
+    container_name: portainer
+    ports:
+      - '8000:8000'
+      - '9000:9000'
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${CFG_FOLDER}/portainer:/data
+
