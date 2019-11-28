@@ -48,9 +48,6 @@ services:
       - MQTT_BROKER_URL=mqtt://mosquitto
     networks:
       - iob-network
-#    command:
-#      mosquitto_passwd -b /mosquitto/config/passwd mqttuser mqttpassword
-#      /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf
 
   iobroker:
     image: 'buanet/iobroker'
@@ -58,23 +55,24 @@ services:
     hostname: iob-virt-host
     ports:
       - '8081:8081'
+      - '1880:1880'
+#    devices:
+#      - /dev/ttyUSB-ZigBeeV3
     volumes:
       - ${IOBROKER_VOLUME_FOLDER}:/opt/iobroker
       - ${IOBROKER_STARTUP_FOLDER}/iobroker_startup.sh:/opt/scripts/iobroker_startup.sh
-      - ${IOBROKER_STARTUP_FOLDER}/setup_zigbee.sh:/opt/scripts/setup_zigbee.sh
+      - ${IOBROKER_STARTUP_FOLDER}/preinstall_adapters.sh:/opt/scripts/preinstall_adapters.sh
     networks:
       - iob-network
     restart: always
     environment:
       - TZ=Europe/Moscow
       - LANGUAGE=en_US.UTF-8
+      - PREINSTALL_ADAPTERS=true
+      - PACKAGES=udev
+      - ZWAVE=false
 #    entrypoint: /bin/bash -c /opt/iobroker/iobroker-startup.sh
 
-# переехало в entrypoint скрипт
-#    command:
-#      echo '#test'>/opt/scripts/iobroker_startup.sh
-#      sed -i 's/,ru:"Драйвера",/,ru:"Драйверы",/' /opt/iobroker/node_modules/iobroker.admin/www/js/app.js
-#      sed -i 's/\\"Драйвера\\"/\\"Драйверы\\"/' /opt/iobroker/node_modules/iobroker.admin/www/js/app.js.map
 
 
   # docker run -d --name=deconz --net=host --restart=always -v /etc/localtime:/etc/localtime:ro -v /opt/deconz:/root/.local/share/dresden-elektronik/deCONZ -e DECONZ_VNC_MODE=0 -e DECONZ_WEB_PORT=8090 --device=/dev/ttyUSB-DECONZ -e DECONZ_DEVICE=/dev/ttyUSB-DECONZ marthoc/deconz

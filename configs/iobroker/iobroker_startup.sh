@@ -6,6 +6,7 @@ avahi=$AVAHI
 uid=$SETUID
 gid=$SETGID
 zwave=$ZWAVE
+preinstalladapters=$PREINSTALL_ADAPTERS
 
 # Getting date and time for logging 
 dati=`date '+%Y-%m-%d %H:%M:%S'`
@@ -160,11 +161,14 @@ then
   echo ' '
 fi
 
-echo "ZigBee is activated by ENV."
-chmod 764 /opt/scripts/setup_zigbee.sh
-sh /opt/scripts/setup_zigbee.sh
-echo "Done."
-echo ' '
+if [ "$preinstalladapters" = "true" ]
+then
+  echo "Preinstall adapters is activated by ENV."
+  chmod 764 /opt/scripts/preinstall_adapters.sh
+  bash /opt/scripts/preinstall_adapters.sh
+  echo "Done."
+  echo ' '
+fi
 
 sleep 5
 
