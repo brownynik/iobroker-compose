@@ -42,13 +42,7 @@ for a in "${installadapters[@]}"; do
       iobroker add ${a}
       if [ ${a} = "node-red" ]
 	then
-	  mkdir ~/.npm-global
-	  npm config set prefix '~/.npm-global'
-	  export PATH=~/.npm-global/bin:$PATH
-          source ~/.profile
-          
-
-	  npm install --unsafe-perm git+https://github.com/brownynik/node-red-contrib-xiaomi-devices.git
+	  sudo -H -u iobroker npm install --unsafe-perm git+https://github.com/brownynik/node-red-contrib-xiaomi-devices.git
 	  #npm install github:brownynik/node-red-contrib-xiaomi-devices
 	  npm install node-red-contrib-light-scheduler
 	  npm install node-red-contrib-squeezebox
